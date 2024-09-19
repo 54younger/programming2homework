@@ -83,6 +83,72 @@ def term(wtok, variables):
 
     return result
 
+def math_function(wtok, variables):
+    func = wtok.get_current()
+    wtok.next()
+
+    if wtok.get_current() != '(':
+        raise SyntaxError("Expected '('")
+    
+    wtok.next()
+    func_result = assignment(wtok, variables)
+
+    if wtok.get_current() != ')':
+        raise SyntaxError("Expected ')'")
+    
+    wtok.next()
+    if func == 'sin':
+        result = math.sin(func_result)
+    elif func == 'cos':
+        result = math.cos(func_result)
+    elif func == 'exp':
+        result = math.exp(func_result)
+    elif func == 'log':
+        result = math.log(func_result)
+    elif func == 'fac':
+        if not func_result.is_integer() or func_result < 0:
+            raise SyntaxError("Expected nonnegative integer")
+        result = math.factorial(int(func_result))
+    else:
+        raise SyntaxError("Unknown function")
+    return result
+
+def sum_function(wtok, variables):
+    wtok.next()
+    if wtok.get_current() != '(':
+        raise SyntaxError("Expected '('")
+    result = 0
+    while 1:
+        wtok.next()
+        num = assignment(wtok, variables)
+        result += num
+        if wtok.get_current() != ',':
+            break
+
+    if wtok.get_current() != ')':
+        raise SyntaxError("Expected ')'")
+    wtok.next()
+
+    return result
+
+def max_function(wtok, variables):
+    wtok.next()
+    if wtok.get_current() != '(':
+        raise SyntaxError("Expected '('")
+    wtok.next()
+    max_val = assignment(wtok, variables)
+    while wtok.get_current() == ',':
+        wtok.next()
+        num = assignment(wtok, variables)
+        if num > max_val:
+            max_val = num
+        #wtok.next()
+    if wtok.get_current() != ')':
+        raise SyntaxError("Expected ')'")
+    wtok.next()
+    result = max_val
+    return result 
+
 
 def factor(wtok, variables):
     """ See syntax chart for factor"""
@@ -101,67 +167,13 @@ def factor(wtok, variables):
         wtok.next()
 
     elif wtok.get_current() in expected_functions:
-        func = wtok.get_current()
-        wtok.next()
-
-        if wtok.get_current() != '(':
-            raise SyntaxError("Expected '('")
-        
-        wtok.next()
-        func_result = assignment(wtok, variables)
-
-        if wtok.get_current() != ')':
-            raise SyntaxError("Expected ')'")
-        
-        wtok.next()
-        if func == 'sin':
-            result = math.sin(func_result)
-        elif func == 'cos':
-            result = math.cos(func_result)
-        elif func == 'exp':
-            result = math.exp(func_result)
-        elif func == 'log':
-            result = math.log(func_result)
-        elif func == 'fac':
-            if not func_result.is_integer() or func_result < 0:
-                raise SyntaxError("Expected nonnegative integer")
-            result = math.factorial(int(func_result))
-        else:
-            raise SyntaxError("Unknown function")
+        result = math_function(wtok, variables)
         
     elif wtok.get_current() == 'sum':
+        result = sum_function(wtok, variables)
 
-        wtok.next()
-        if wtok.get_current() != '(':
-            raise SyntaxError("Expected '('")
-        result = 0
-        while 1:
-            wtok.next()
-            num = assignment(wtok, variables)
-            result += num
-            if wtok.get_current() != ',':
-                break
-
-        if wtok.get_current() != ')':
-            raise SyntaxError("Expected ')'")
-        wtok.next()
-    
     elif wtok.get_current() == 'max':
-        wtok.next()
-        if wtok.get_current() != '(':
-            raise SyntaxError("Expected '('")
-        wtok.next()
-        max_val = assignment(wtok, variables)
-        while wtok.get_current() == ',':
-            wtok.next()
-            num = assignment(wtok, variables)
-            if num > max_val:
-                max_val = num
-            #wtok.next()
-        if wtok.get_current() != ')':
-            raise SyntaxError("Expected ')'")
-        wtok.next()
-        result = max_val
+        result = max_function(wtok, variables)
 
     elif wtok.is_name():
         if wtok.get_current() in variables:
