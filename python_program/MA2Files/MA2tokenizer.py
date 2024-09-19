@@ -65,7 +65,7 @@ class TokenizeWrapper:
 
 
 def main():
-    line = 'hello! 25 123.4 (1e10 ++) - "LAST" #hej hopp'
+    line = 'hello! x -25 123.4 (1e10 ** ++) - "LAST" #hej hopp'
     w = TokenizeWrapper(line)
     try:
         while w.has_next():
