@@ -1,6 +1,6 @@
 """
 Solutions to module 2 - A calculator
-Student: 
+Student:
 Mail:
 Reviewed by:
 Reviewed date:
@@ -16,7 +16,7 @@ of SyntaxError and TokenError.
 """
 
 import math
-from tokenize import TokenError  
+from tokenize import TokenError
 from MA2tokenizer import TokenizeWrapper
 
 
@@ -25,12 +25,20 @@ class SyntaxError(Exception):
         self.func_result = func_result
         super().__init__(self.func_result)
 
+class EvaluationError(Exception):
+    def __init__(self, func_result):
+        self.func_result = func_result
+        super().__init__(self.func_result)
+
 
 def statement(wtok, variables):
     """ See syntax chart for statement"""
+
     result = assignment(wtok, variables)
     if wtok.is_comment():
         raise SyntaxError("Unexpected comment")
+    if not wtok.is_at_end():
+        raise SyntaxError("Expected end of statement")
     return result
 
 
@@ -38,15 +46,16 @@ def assignment(wtok, variables):
     """ See syntax chart for assignment"""
     result = expression(wtok, variables)
 
-    if wtok.get_current() == '=':
+    while wtok.get_current() == '=':
         wtok.next()
         if wtok.is_name():
             variables[wtok.get_current()] = result
             wtok.next()
+
         else:
             raise SyntaxError(" Expected variable after '='")
-        
-    
+
+
     return result
 
 
@@ -54,13 +63,14 @@ def expression(wtok, variables):
     """ See syntax chart for expression"""
     result = term(wtok, variables)
 
-    while wtok.get_current() == '+':
-        wtok.next()
-        result = result + term(wtok, variables)
+    while wtok.get_current() == '+' or wtok.get_current() == '-':
+      while wtok.get_current() == '+':
+          wtok.next()
+          result = result + term(wtok, variables)
 
-    while wtok.get_current() == '-':
-        wtok.next()
-        result = result - term(wtok, variables)
+      while wtok.get_current() == '-':
+          wtok.next()
+          result = result - term(wtok, variables)
 
     return result
 
@@ -69,17 +79,17 @@ def term(wtok, variables):
     """ See syntax chart for term"""
     result = factor(wtok, variables)
 
+    while wtok.get_current() == '*' or wtok.get_current() == '/':
+      while wtok.get_current() == '*':
+          wtok.next()
+          result = result * factor(wtok, variables)
 
-    while wtok.get_current() == '*': 
-        wtok.next()
-        result = result * factor(wtok, variables)
-
-    while wtok.get_current() == '/': 
-        wtok.next()
-        divisor = factor(wtok, variables)
-        if divisor == 0:
-            raise SyntaxError("Division by zero")
-        result = result / divisor
+      while wtok.get_current() == '/':
+          wtok.next()
+          divisor = factor(wtok, variables)
+          if divisor == 0:
+              raise EvaluationError("Division by zero")
+          result = result / divisor
 
     return result
 
@@ -89,13 +99,13 @@ def math_function(wtok, variables):
 
     if wtok.get_current() != '(':
         raise SyntaxError("Expected '('")
-    
+
     wtok.next()
     func_result = assignment(wtok, variables)
 
     if wtok.get_current() != ')':
         raise SyntaxError("Expected ')'")
-    
+
     wtok.next()
     if func == 'sin':
         result = math.sin(func_result)
@@ -104,56 +114,42 @@ def math_function(wtok, variables):
     elif func == 'exp':
         result = math.exp(func_result)
     elif func == 'log':
+        if func_result <= 0:
+            raise EvaluationError("there can not equal or less than 0 in log")
         result = math.log(func_result)
     elif func == 'fac':
         if not func_result.is_integer() or func_result < 0:
-            raise SyntaxError("Expected nonnegative integer")
+            raise EvaluationError("Expected nonnegative integer")
         result = math.factorial(int(func_result))
     else:
         raise SyntaxError("Unknown function")
     return result
 
-def sum_function(wtok, variables):
-    wtok.next()
+
+
+def arglist(wtok, variables):
+
+    arg = []
     if wtok.get_current() != '(':
-        raise SyntaxError("Expected '('")
-    result = 0
+        #print(wtok.get_current())
+        raise SyntaxError("arglist Expected '('")
+    wtok.next()
     while 1:
-        wtok.next()
-        num = assignment(wtok, variables)
-        result += num
-        if wtok.get_current() != ',':
-            break
+        arg.append(assignment(wtok, variables))
 
-    if wtok.get_current() != ')':
-        raise SyntaxError("Expected ')'")
-    wtok.next()
-
-    return result
-
-def max_function(wtok, variables):
-    wtok.next()
-    if wtok.get_current() != '(':
-        raise SyntaxError("Expected '('")
-    wtok.next()
-    max_val = assignment(wtok, variables)
-    while wtok.get_current() == ',':
-        wtok.next()
-        num = assignment(wtok, variables)
-        if num > max_val:
-            max_val = num
-        #wtok.next()
-    if wtok.get_current() != ')':
-        raise SyntaxError("Expected ')'")
-    wtok.next()
-    result = max_val
-    return result 
-
+        if wtok.get_current() == ',':
+            wtok.next()
+            continue
+        elif wtok.get_current() == ')':
+            wtok.next()
+            return arg
+        elif wtok.is_at_end:
+            raise SyntaxError("Expected ')'")
 
 def factor(wtok, variables):
     """ See syntax chart for factor"""
-    expected_functions = ['sin', 'cos', 'exp', 'log', 'fac']
-
+    function_1 = ['sin', 'cos', 'exp', 'log', 'fac']
+    function_n = ['max', 'sum']
     if wtok.get_current() == '(':
         wtok.next()
         result = assignment(wtok, variables)
@@ -161,38 +157,42 @@ def factor(wtok, variables):
             raise SyntaxError("Expected ')'")
         else:
             wtok.next()
-            
+
     elif wtok.is_number():
         result = float(wtok.get_current())
         wtok.next()
 
-    elif wtok.get_current() in expected_functions:
+    elif wtok.get_current() in function_1:
         result = math_function(wtok, variables)
-        
-    elif wtok.get_current() == 'sum':
-        result = sum_function(wtok, variables)
 
-    elif wtok.get_current() == 'max':
-        result = max_function(wtok, variables)
+    elif wtok.get_current() in function_n:
+
+        function_n_name = wtok.get_current()
+        wtok.next()
+        arg = arglist(wtok, variables)
+        if function_n_name == 'max':
+            result = max(arg)
+        elif function_n_name == 'sum':
+            result = sum(arg)
 
     elif wtok.is_name():
         if wtok.get_current() in variables:
             result = variables[wtok.get_current()]
             wtok.next()
         else:
-            raise SyntaxError(f" Undefined variable: '{wtok.get_current()}'")
-    
+            raise EvaluationError(f" Undefined variable: '{wtok.get_current()}'")
+
     elif wtok.get_current() == '-':
         wtok.next()
         result = -factor(wtok, variables)
-
     else:
         raise SyntaxError(
-            "Expected number, name or '(' or function")  
+            "Expected number, name or '(' or function")
+
     return result
 
 
-         
+
 def main():
     """
     Handles:
@@ -201,18 +201,18 @@ def main():
        raised exceptions.
     Starts with reading the init file
     """
-    
+
     print("Numerical calculator")
     variables = {"ans": 0.0, "E": math.e, "PI": math.pi}
-    # Note: The unit test file initiate variables in this way. If your implementation 
+    # Note: The unit test file initiate variables in this way. If your implementation
     # requires another initiation you have to update the test file accordingly.
-    init_file = 'MA2init.txt'
+    init_file = './python_program/MA2Files/MA2init.txt'
     lines_from_file = ''
     try:
         with open(init_file, 'r') as file:
             lines_from_file = file.readlines()
     except FileNotFoundError:
-        pass
+        print("file not find")
 
     while True:
         if lines_from_file:
@@ -245,7 +245,7 @@ def main():
 
             except TokenError as te:
                 print('*** Syntax error: Unbalanced parentheses')
- 
+
 
 
 if __name__ == "__main__":

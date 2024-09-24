@@ -44,13 +44,13 @@ class TokenizeWrapper:
 
     def is_name(self):
         return self.current[0] == 1
-    
+
     def is_string(self):
         return self.current[0] == 3
 
     def is_newline(self):
         return self.current[0] == 4
-    
+
     def is_comment(self):
         return self.current[0] == 55
 
@@ -65,7 +65,7 @@ class TokenizeWrapper:
 
 
 def main():
-    line = 'hello! x -25 123.4 (1e10 ** ++) - "LAST" #hej hopp'
+    line = 'hello! x -25 123.4 (1e10 ** ++) F(1) - "LAST" #hej hopp'
     w = TokenizeWrapper(line)
     try:
         while w.has_next():
