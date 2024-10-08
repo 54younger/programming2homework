@@ -52,40 +52,110 @@ class LinkedList:
 
     # To be implemented
 
-    def length(self):          #   
-        pass
+    def length(self):
+        if self.first is None:
+            return 0
+        count = 1
+        f = self.first 
+        while f.succ:
+            f = f.succ
+            count += 1 
+        return count
 
     def mean(self):               
         pass
 
     def remove_last(self):       # 
-        pass
+        if self.first is None:
+            raise ValueError('List is empty')
+        f = self.first
+        if f.succ is None:
+                result = f.data
+                self.first = None
+                return result
+        while f.succ.succ:
+            f = f.succ
+        result = f.succ.data
+        f.succ = None
+        return result
 
-    def remove(self, x):         # 
-        pass
+
+    def remove(self, x):
+        f = self.first
+        if f.data == x:
+            self.first = f.succ
+            return True
+
+        while f.succ:
+            if f.succ.data == x:
+                f.succ = f.succ.succ
+                return True
+            else:
+                f = f.succ
+
+        return False
+        
 
 
     def to_list(self):            #
-        pass
+        list = []
+        for x in self:
+            list.append(x)
+        return list
 
     def remove_all(self, x):      #
-        pass
+        count = 0
+        while self.first.data == x:
+            self.first = self.first.succ
+            count += 1
+            if self.first is None:
+                return count
+        
+        f = self.first
+        while f.succ:
+            if f.succ.data == x:
+                f.succ = f.succ.succ
+                count += 1
+            else:
+                f = f.succ
 
-    def __str__(self):            #
-        pass
+    def __str__(self):
+        if self.first is None:
+            return '()'
+        string = '('
+        for x in self:
+            string += str(x) + ', '
+        
+        string = string[:-2] + ')'
+        return string
 
     def copy(self):               #
+        
         result = LinkedList()
         for x in self:
             result.insert(x)
         return result
-    ''' Complexity for this implementation: 
+        ''' 
+        Complexity for this implementation: O(n^2)
+        '''
 
-    '''
 
     def copy(self):               # Should be more efficient
-        pass                      
-    ''' Complexity for this implementation:
+
+        new_list = LinkedList()
+        if self.first is None:
+            return new_list
+        f = self.first
+        new_list.first = self.Node(f.data, None)
+        new_f = new_list.first
+        while f.succ:
+            new_f.succ = self.Node(f.succ.data, None)
+            f = f.succ
+            new_f = new_f.succ
+            
+        return new_list
+                         
+    ''' Complexity for this implementation: O(n)
 
     '''
 

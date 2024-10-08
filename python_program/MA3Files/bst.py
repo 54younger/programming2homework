@@ -56,13 +56,19 @@ class BST:
             self._print(r.right)
 
     def contains(self, k): #
-        n = self.root
-        while n and n.key != k:
-            if k < n.key:
-                n = n.left
-            else:
-                n = n.right
-        return n is not None
+        return self._contains(self.root, k)
+    
+    def _contains(self, r, k):
+        if r is None:
+            return False
+        elif k < r.key:
+            return self._contains(r.left, k)
+        elif k > r.key:
+            return self._contains(r.right, k)
+        else:
+            return True
+    
+        
 
     def size(self):
         return self._size(self.root)
@@ -78,7 +84,16 @@ class BST:
 #
 
     def height(self):                 #            
-        pass
+        if self.root is None:
+            return 0
+        else:
+            return self._height(self.root)
+    
+    def _height(self, r):
+        if r is None:
+            return 0
+        else:
+            return 1 + max(self._height(r.left), self._height(r.right))
 
     def remove(self, key): #
         self.root = self._remove(self.root, key)
@@ -87,31 +102,53 @@ class BST:
         if r is None:
             return None
         elif k < r.key:
-            pass
             # r.left = left subtree with k removed
+            r.left = self._remove(r.left, k)
         elif k > r.key:
-            pass
             # r.right =  right subtree with k removed
+            r.right = self._remove(r.right, k)
+        
         else:  # This is the key to be removed
             if r.left is None:     # Easy case
                 return r.right
             elif r.right is None:  # Also easy case
                 return r.left
-            else:  # This is the tricky case.
-                pass
+            else:  
+                # This is the tricky case.
                 # Find the smallest key in the right subtree
                 # Put that key in this node
                 # Remove that key from the right subtree
-        return r  # Remember this! It applies to some of the cases above
-
+                temp = r.right
+                while temp.left:
+                    temp = temp.left
+                r.key = temp.key
+                r.right = self._remove(r.right, temp.key)
+        return r
+    
     def __str__(self):                #            
-        pass
+        result = '<'
+        if self.root is None:
+            return result + '>'
+        else:
+            for x in self:
+                result += str(x) + ', '
+            return result[:-2] + '>'
+
+
 
     def to_list(self):                      #      
-        pass
+        list = []
+        for x in self:
+            list.append(x)
+        return list
+    # Complexity: O(n)
 
     def to_LinkedList(self):                 #     
-        pass
+        result = LinkedList()
+        for x in self:
+            result.insert(x)
+        return result
+    # Complexity: O(n^2)
 
 
 def random_tree(n):                               # Useful
@@ -138,10 +175,10 @@ if __name__ == "__main__":
 What is the generator good for?
 ==============================
 
-1. computing size?
-2. computing height?
-3. contains?
-4. insert?
-5. remove?
+1. computing size? yes, sum(1 for x in t)
+2. computing height? no, need to recurse the subtrees height
+3. contains? yse, any(k == x for x in t)
+4. insert? no, need to recurse the subtrees
+5. remove? no, need to adjust the tree
 
 """
