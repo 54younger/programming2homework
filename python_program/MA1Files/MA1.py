@@ -81,30 +81,22 @@ def reverse_string(s: str) -> str:
     else:
         return s[-1] + reverse_string(s[:-1])
 
-
-def largest(a: iter):                     
+def largest(a: iter):
     """ Returns the largest element in a"""
-    a_copy = a[:] #dont change original
-    if len(a_copy) > 1:
-        max = a_copy[0]
-        if max > a_copy[1]:
-            a_copy[1] = max
-        return largest(a_copy[1:])
+    if len(a) > 1:
+        max_of_rest = largest(a[1:])
+        return a[0] if a[0] > max_of_rest else max_of_rest
     else:
-        return a_copy[0]  #always put the larget infront
+        return a[0]
 
-    
-
-
-def count(x, s: list) -> int:                
-    """ Counts the number of occurences of x on all levels in s"""
-    times = 0
-    for i in s:
-        if x == i:
-            times+= 1
-        if type(i) == list:
-            times += count(x,i)
-    return times
+def count(x, s: list) -> int:
+    """ Counts the number of occurrences of x on all levels in s"""
+    if not s:
+        return 0
+    times = 1 if s[0] == x else 0
+    if isinstance(s[0], list):
+        times += count(x, s[0])
+    return times + count(x, s[1:])
 
 
 
@@ -173,7 +165,7 @@ if __name__ == "__main__":
   
   
   Exercise 8: Time for the tile game with 50 tiles:
-    t(50)=2^50-1
+    t(50)=2^50-1=1125899906842623 moves
     
 
   

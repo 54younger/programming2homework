@@ -19,6 +19,7 @@ import math
 from tokenize import TokenError
 from MA2tokenizer import TokenizeWrapper
 
+dict = {"function_1": ['sin', 'cos', 'exp', 'log', 'fac'],"function_n": ['max', 'sum']}
 
 class SyntaxError(Exception):
     def __init__(self, func_result):
@@ -148,8 +149,7 @@ def arglist(wtok, variables):
 
 def factor(wtok, variables):
     """ See syntax chart for factor"""
-    function_1 = ['sin', 'cos', 'exp', 'log', 'fac']
-    function_n = ['max', 'sum']
+
     if wtok.get_current() == '(':
         wtok.next()
         result = assignment(wtok, variables)
@@ -162,10 +162,10 @@ def factor(wtok, variables):
         result = float(wtok.get_current())
         wtok.next()
 
-    elif wtok.get_current() in function_1:
+    elif wtok.get_current() in dict["function_1"]:
         result = math_function(wtok, variables)
 
-    elif wtok.get_current() in function_n:
+    elif wtok.get_current() in dict["function_n"]:
 
         function_n_name = wtok.get_current()
         wtok.next()
